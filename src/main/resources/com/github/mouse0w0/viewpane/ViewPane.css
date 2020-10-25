@@ -1,0 +1,7 @@
+.tab-button {
+    -fx-padding: 2 8 2 8;
+}
+
+.tab-button:hover {
+    -fx-background-color: #cccccc;
+}
