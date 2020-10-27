@@ -10,32 +10,32 @@ public class ViewPaneTest extends Application {
     public void start(Stage primaryStage) throws Exception {
         ViewPane pane = new ViewPane();
 
+        ViewGroup leftTop = pane.getViewGroup(EightPos.LEFT_TOP);
         ViewTab tab1 = new ViewTab("First");
         ViewTab tab2 = new ViewTab("Second");
         ViewTab tab3 = new ViewTab("Third");
+        leftTop.getTabs().addAll(tab1, tab2, tab3);
 
-        ViewTab tab5 = new ViewTab("LEFT_BOTTOM");
-        tab5.setPos(EightPos.LEFT_BOTTOM);
+        ViewGroup leftBottom = pane.getViewGroup(EightPos.LEFT_BOTTOM);
+        leftBottom.getTabs().addAll(new ViewTab("LEFT_BOTTOM"));
 
-        ViewTab tab6 = new ViewTab("TOP_LEFT");
-        tab6.setPos(EightPos.TOP_LEFT);
+        ViewGroup topLeft = pane.getViewGroup(EightPos.TOP_LEFT);
+        topLeft.getTabs().addAll(new ViewTab("TOP_LEFT"));
 
-        ViewTab tab8 = new ViewTab("TOP_RIGHT");
-        tab8.setPos(EightPos.TOP_RIGHT);
+        ViewGroup topRight = pane.getViewGroup(EightPos.TOP_RIGHT);
+        topRight.getTabs().addAll(new ViewTab("TOP_RIGHT"));
 
-        ViewTab tab9 = new ViewTab("BOTTOM_LEFT");
-        tab9.setPos(EightPos.BOTTOM_LEFT);
+        ViewGroup bottomLeft = pane.getViewGroup(EightPos.BOTTOM_LEFT);
+        bottomLeft.getTabs().addAll(new ViewTab("BOTTOM_LEFT"));
 
-        ViewTab tab10 = new ViewTab("BOTTOM_RIGHT");
-        tab10.setPos(EightPos.BOTTOM_RIGHT);
+        ViewGroup bottomRight = pane.getViewGroup(EightPos.BOTTOM_RIGHT);
+        bottomRight.getTabs().addAll(new ViewTab("BOTTOM_RIGHT"));
 
-        ViewTab tab11 = new ViewTab("RIGHT_TOP");
-        tab11.setPos(EightPos.RIGHT_TOP);
+        ViewGroup rightTop = pane.getViewGroup(EightPos.RIGHT_TOP);
+        rightTop.getTabs().addAll(new ViewTab("RIGHT_TOP"));
 
-        ViewTab tab12 = new ViewTab("RIGHT_BOTTOM");
-        tab12.setPos(EightPos.RIGHT_BOTTOM);
-
-        pane.getTabs().addAll(tab1, tab2, tab3, tab5, tab6, tab8, tab9, tab10, tab11, tab12);
+        ViewGroup rightBottom = pane.getViewGroup(EightPos.RIGHT_BOTTOM);
+        rightBottom.getTabs().addAll(new ViewTab("RIGHT_BOTTOM"));
 
         primaryStage.setTitle("ViewPane");
         primaryStage.setScene(new Scene(pane));

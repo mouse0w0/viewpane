@@ -1,6 +1,7 @@
 package com.github.mouse0w0.viewpane;
 
 import com.github.mouse0w0.viewpane.geometry.DividerPos;
+import com.github.mouse0w0.viewpane.geometry.EightPos;
 import com.github.mouse0w0.viewpane.skin.ViewPaneSkin;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -15,18 +16,20 @@ public class ViewPane extends Control {
     public ViewPane() {
         getStyleClass().setAll("view-pane");
 
-        getTabs().addListener(new ListChangeListener<ViewTab>() {
+        getViewGroups().addListener(new ListChangeListener<ViewGroup>() {
             @Override
-            public void onChanged(Change<? extends ViewTab> c) {
+            public void onChanged(Change<? extends ViewGroup> c) {
                 while (c.next()) {
                     if (c.wasRemoved()) {
-                        for (ViewTab viewTab : c.getRemoved()) {
-                            viewTab.setViewPane(null);
+                        for (ViewGroup viewGroup : c.getRemoved()) {
+                            viewGroup.setViewPane(null);
+                            cacheViewGroups[viewGroup.getPos().ordinal()] = null;
                         }
                     }
                     if (c.wasAdded()) {
-                        for (ViewTab viewTab : c.getAddedSubList()) {
-                            viewTab.setViewPane(ViewPane.this);
+                        for (ViewGroup viewGroup : c.getAddedSubList()) {
+                            viewGroup.setViewPane(ViewPane.this);
+                            cacheViewGroups[viewGroup.getPos().ordinal()] = viewGroup;
                         }
                     }
                 }
@@ -34,10 +37,20 @@ public class ViewPane extends Control {
         });
     }
 
-    private final ObservableList<ViewTab> tabs = FXCollections.observableArrayList();
+    private final ViewGroup[] cacheViewGroups = new ViewGroup[8];
+    private final ObservableList<ViewGroup> viewGroups = FXCollections.observableArrayList();
 
-    public ObservableList<ViewTab> getTabs() {
-        return tabs;
+    public ObservableList<ViewGroup> getViewGroups() {
+        return viewGroups;
+    }
+
+    public ViewGroup getViewGroup(EightPos pos) {
+        ViewGroup viewGroup = cacheViewGroups[pos.ordinal()];
+        if (viewGroup == null) {
+            viewGroup = new ViewGroup(pos);
+            getViewGroups().add(viewGroup);
+        }
+        return viewGroup;
     }
 
     @Override

@@ -13,27 +13,28 @@ public class ViewTab {
         setText(text);
     }
 
-    private ReadOnlyObjectWrapper<ViewPane> viewPane;
+    private ReadOnlyObjectWrapper<ViewGroup> viewGroup;
 
-    private ReadOnlyObjectWrapper<ViewPane> viewPanePropertyImpl() {
-        if (viewPane == null) {
-            viewPane = new ReadOnlyObjectWrapper<>(this, "viewPane");
+    private ReadOnlyObjectWrapper<ViewGroup> viewGroupPropertyImpl() {
+        if (viewGroup == null) {
+            viewGroup = new ReadOnlyObjectWrapper<>(this, "viewGroup");
         }
-        return viewPane;
+        return viewGroup;
     }
 
-    final void setViewPane(ViewPane viewPane) {
-        viewPanePropertyImpl().set(viewPane);
+    final void setViewGroup(ViewGroup viewGroup) {
+        viewGroupPropertyImpl().set(viewGroup);
     }
 
-    public final ReadOnlyObjectProperty<ViewPane> viewPaneProperty() {
-        return viewPanePropertyImpl().getReadOnlyProperty();
+    public final ReadOnlyObjectProperty<ViewGroup> viewGroupProperty() {
+        return viewGroupPropertyImpl().getReadOnlyProperty();
     }
 
-    public final ViewPane getViewPane() {
-        return viewPane == null ? null : viewPane.get();
+    public final ViewGroup getViewGroup() {
+        return viewGroup == null ? null : viewGroup.get();
     }
 
+    @Deprecated
     private ObjectProperty<EightPos> pos;
 
     public ObjectProperty<EightPos> posProperty() {
@@ -102,24 +103,20 @@ public class ViewTab {
         contentProperty().set(value);
     }
 
-    private ReadOnlyBooleanWrapper selected;
+    private BooleanProperty selected;
 
-    private ReadOnlyBooleanWrapper selectedPropertyImpl() {
+    public final BooleanProperty selectedProperty() {
         if (selected == null) {
-            selected = new ReadOnlyBooleanWrapper(this, "selected");
+            selected = new SimpleBooleanProperty(this, "selected");
         }
         return selected;
-    }
-
-    public final ReadOnlyBooleanProperty selectedProperty() {
-        return selectedPropertyImpl().getReadOnlyProperty();
     }
 
     public final boolean isSelected() {
         return selected != null && selected.get();
     }
 
-    final void setSelected(boolean selected) {
-        selectedPropertyImpl().set(selected);
+    public final void setSelected(boolean selected) {
+        selectedProperty().set(selected);
     }
 }
