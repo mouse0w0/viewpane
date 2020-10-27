@@ -1,6 +1,5 @@
 package com.github.mouse0w0.viewpane;
 
-import com.github.mouse0w0.viewpane.geometry.EightPos;
 import javafx.beans.property.*;
 import javafx.scene.Node;
 
@@ -32,24 +31,6 @@ public class ViewTab {
 
     public final ViewGroup getViewGroup() {
         return viewGroup == null ? null : viewGroup.get();
-    }
-
-    @Deprecated
-    private ObjectProperty<EightPos> pos;
-
-    public ObjectProperty<EightPos> posProperty() {
-        if (pos == null) {
-            pos = new SimpleObjectProperty<>(this, "pos", EightPos.LEFT_TOP);
-        }
-        return pos;
-    }
-
-    public EightPos getPos() {
-        return pos == null ? EightPos.LEFT_TOP : pos.get();
-    }
-
-    public void setPos(EightPos pos) {
-        posProperty().set(pos);
     }
 
     private StringProperty text;
