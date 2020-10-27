@@ -42,7 +42,7 @@ public class ViewGroup {
 
     private final ObservableList<ViewTab> tabs = FXCollections.observableArrayList();
 
-    public ObservableList<ViewTab> getTabs() {
+    public final ObservableList<ViewTab> getTabs() {
         return tabs;
     }
 

@@ -102,9 +102,13 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
         Side secondary = pos.getSecondary();
         if (secondary == Side.TOP || secondary == Side.LEFT) {
-            sideBar.setTopLeftBar(null);
+            if (sideBar.getTopLeftBar().getViewGroup() == viewGroup) {
+                sideBar.setTopLeftBar(null);
+            }
         } else {
-            sideBar.setTopLeftBar(null);
+            if (sideBar.getBottomRightBar().getViewGroup() == viewGroup) {
+                sideBar.setBottomRightBar(null);
+            }
         }
     }
 
@@ -495,10 +499,50 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
     }
 
     static class ContentDivider extends Region {
-        private final ViewPane.Divider divider;
+        private ViewPane.Divider divider;
 
-        public ContentDivider(ViewPane.Divider divider) {
-            this.divider = divider;
+        public ContentDivider() {
+            getStyleClass().setAll("divider");
+        }
+    }
+
+    static class ContentArea extends Region {
+        private Node content;
+
+        public ContentArea() {
+            getStyleClass().setAll("content-area");
+        }
+
+        public Node getContent() {
+            return content;
+        }
+
+        public void setContent(Node content) {
+            this.content = content;
+        }
+
+        @Override
+        protected double computePrefWidth(double height) {
+            double contentWidth = content != null && content.isManaged() ? snapSize(content.prefWidth(-1)) : 0;
+            return snappedLeftInset() + contentWidth + snappedRightInset();
+        }
+
+        @Override
+        protected double computePrefHeight(double width) {
+            double contentHeight = content != null && content.isManaged() ? snapSize(content.prefHeight(-1)) : 0;
+            return snappedTopInset() + contentHeight + snappedBottomInset();
+        }
+
+        @Override
+        protected void layoutChildren() {
+            if (content != null && content.isManaged()) {
+                double top = snappedTopInset();
+                double left = snappedLeftInset();
+                double bottom = snappedBottomInset();
+                double right = snappedRightInset();
+                content.resize(getWidth() - left - right, getHeight() - top - bottom);
+                content.relocate(left, top);
+            }
         }
     }
 
