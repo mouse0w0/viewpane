@@ -3,12 +3,15 @@ package com.github.mouse0w0.viewpane.skin;
 import com.github.mouse0w0.viewpane.ViewGroup;
 import com.github.mouse0w0.viewpane.ViewPane;
 import com.github.mouse0w0.viewpane.ViewTab;
+import com.github.mouse0w0.viewpane.geometry.DividerPos;
 import com.github.mouse0w0.viewpane.geometry.EightPos;
 import com.sun.javafx.scene.control.behavior.ButtonBehavior;
 import com.sun.javafx.scene.control.skin.LabeledSkinBase;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.WeakInvalidationListener;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
@@ -54,6 +57,8 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
                 }
             }
         });
+
+        control.contentProperty().addListener(observable -> divisionArea.setContent(control.getContent()));
     }
 
     public ObservableList<ViewGroup> getViewGroups() {
@@ -84,13 +89,13 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         if (secondary == Side.TOP || secondary == Side.LEFT) {
             TabButtonBar tabButtonBar = sideBar.getTopLeftBar();
             if (tabButtonBar == null || tabButtonBar.getViewGroup() != viewGroup) {
-                tabButtonBar = new TabButtonBar(viewGroup);
+                tabButtonBar = new TabButtonBar(this, viewGroup);
                 sideBar.setTopLeftBar(tabButtonBar);
             }
         } else {
             TabButtonBar tabButtonBar = sideBar.getBottomRightBar();
             if (tabButtonBar == null || tabButtonBar.getViewGroup() != viewGroup) {
-                tabButtonBar = new TabButtonBar(viewGroup);
+                tabButtonBar = new TabButtonBar(this, viewGroup);
                 sideBar.setBottomRightBar(tabButtonBar);
             }
         }
@@ -102,12 +107,16 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
         Side secondary = pos.getSecondary();
         if (secondary == Side.TOP || secondary == Side.LEFT) {
-            if (sideBar.getTopLeftBar().getViewGroup() == viewGroup) {
+            TabButtonBar bar = sideBar.getTopLeftBar();
+            if (bar.getViewGroup() == viewGroup) {
                 sideBar.setTopLeftBar(null);
+                bar.dispose();
             }
         } else {
-            if (sideBar.getBottomRightBar().getViewGroup() == viewGroup) {
+            TabButtonBar bar = sideBar.getBottomRightBar();
+            if (bar.getViewGroup() == viewGroup) {
                 sideBar.setBottomRightBar(null);
+                bar.dispose();
             }
         }
     }
@@ -382,31 +391,62 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
     static class TabButtonBar extends Region {
 
+        private final ViewPaneSkin viewPaneSkin;
         private final ViewGroup viewGroup;
 
-        public TabButtonBar(ViewGroup viewGroup) {
+        private final ListChangeListener<ViewTab> tabChangeListener = new ListChangeListener<ViewTab>() {
+            @Override
+            public void onChanged(Change<? extends ViewTab> c) {
+                while (c.next()) {
+                    if (c.wasRemoved()) {
+                        for (ViewTab viewTab : c.getRemoved()) {
+                            removeViewTab(viewTab);
+                        }
+                    }
+                    if (c.wasAdded()) {
+                        for (ViewTab viewTab : c.getAddedSubList()) {
+                            addViewTab(viewTab);
+                        }
+                    }
+                }
+            }
+        };
+
+        private final ChangeListener<ViewTab> selectedItemListener = new ChangeListener<ViewTab>() {
+            @Override
+            public void changed(ObservableValue<? extends ViewTab> observable, ViewTab oldValue, ViewTab newValue) {
+                if (oldValue != null) {
+                    setView(null);
+                    oldValue.contentProperty().removeListener(tabContentListener);
+                }
+                if (newValue != null) {
+                    setView(newValue.getContent());
+                    newValue.contentProperty().addListener(tabContentListener);
+                }
+            }
+        };
+
+        private final ChangeListener<Node> tabContentListener = new ChangeListener<Node>() {
+            @Override
+            public void changed(ObservableValue<? extends Node> observable, Node oldValue, Node newValue) {
+                setView(newValue);
+            }
+        };
+
+        public TabButtonBar(ViewPaneSkin viewPaneSkin, ViewGroup viewGroup) {
+            this.viewPaneSkin = viewPaneSkin;
             this.viewGroup = viewGroup;
 
             getStyleClass().setAll("tab-button-bar");
 
             viewGroup.getTabs().forEach(this::addViewTab);
-            viewGroup.getTabs().addListener(new ListChangeListener<ViewTab>() {
-                @Override
-                public void onChanged(Change<? extends ViewTab> c) {
-                    while (c.next()) {
-                        if (c.wasRemoved()) {
-                            for (ViewTab viewTab : c.getRemoved()) {
-                                removeViewTab(viewTab);
-                            }
-                        }
-                        if (c.wasAdded()) {
-                            for (ViewTab viewTab : c.getAddedSubList()) {
-                                addViewTab(viewTab);
-                            }
-                        }
-                    }
-                }
-            });
+            viewGroup.getTabs().addListener(tabChangeListener);
+
+            viewGroup.getSelectionModel().selectedItemProperty().addListener(selectedItemListener);
+        }
+
+        private void setView(Node content) {
+            viewPaneSkin.divisionArea.setView(viewGroup.getPos(), content);
         }
 
         public ViewGroup getViewGroup() {
@@ -419,6 +459,15 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
         public void removeViewTab(ViewTab viewTab) {
             getChildren().removeIf(node -> ((TabButton) node).getTab() == viewTab);
+        }
+
+        public void dispose() {
+            setView(null);
+
+            viewGroup.getTabs().removeListener(tabChangeListener);
+            viewGroup.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
+
+            getChildren().clear();
         }
 
         @Override
@@ -482,43 +531,123 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
     }
 
     static class DivisionArea extends Region {
-        @Override
-        protected double computePrefWidth(double height) {
-            return super.computePrefWidth(height);
+
+        private final DivisionHelper divisionHelper;
+
+        private final ContentArea[] views = new ContentArea[8];
+        private ContentArea center;
+        private final ContentDivider[] dividers = new ContentDivider[8];
+
+        private boolean performingLayout = false;
+
+        public DivisionArea() {
+            this.divisionHelper = new DivisionHelper();
+
+            getStyleClass().setAll("division-area");
         }
 
-        @Override
-        protected double computePrefHeight(double width) {
-            return super.computePrefHeight(width);
+        public void setContent(Node content) {
+            if (center == null) {
+                center = new ContentArea(null);
+                getChildren().add(center);
+            }
+            center.setContent(content);
+        }
+
+        public void setView(EightPos pos, Node content) {
+            ContentArea view = views[pos.ordinal()];
+            if (view == null) {
+                view = new ContentArea(pos);
+                getChildren().add(view);
+                views[pos.ordinal()] = view;
+            }
+            view.setContent(content);
+            divisionHelper.bounds[pos.ordinal()].enable = content != null;
         }
 
         @Override
         protected void layoutChildren() {
-            super.layoutChildren();
+            if (performingLayout) return;
+            performingLayout = true;
+
+            double top = snappedTopInset();
+            double left = snappedLeftInset();
+            double bottom = snappedBottomInset();
+            double right = snappedRightInset();
+            double width = getWidth();
+            double height = getHeight();
+            double contentWidth = width - left - right;
+            double contentHeight = height - top - bottom;
+
+            divisionHelper.update(left, top, contentWidth, contentHeight, isSnapToPixel());
+
+            // 处理分割线
+            for (int i = 0; i < 8; i++) {
+
+            }
+
+            // 处理视图
+            for (int i = 0; i < 8; i++) {
+                ContentArea view = views[i];
+                if (view != null && view.isManaged()) {
+                    view.resizeRelocate(divisionHelper.bounds[i]);
+                }
+            }
+
+            // 处理中部内容
+            if (center != null && center.isManaged()) {
+                center.resizeRelocate(divisionHelper.center);
+            }
+
+            performingLayout = false;
         }
     }
 
     static class ContentDivider extends Region {
         private ViewPane.Divider divider;
 
-        public ContentDivider() {
+        private final DividerPos pos;
+
+        public ContentDivider(DividerPos pos) {
+            this.pos = pos;
+
             getStyleClass().setAll("divider");
+        }
+
+        @Override
+        protected double computePrefWidth(double height) {
+            return snappedLeftInset() + snappedRightInset();
+        }
+
+        @Override
+        protected double computePrefHeight(double width) {
+            return snappedTopInset() + snappedBottomInset();
         }
     }
 
     static class ContentArea extends Region {
+        private final EightPos pos;
+
         private Node content;
 
-        public ContentArea() {
+        public ContentArea(EightPos pos) {
+            this.pos = pos;
+
             getStyleClass().setAll("content-area");
         }
 
-        public Node getContent() {
-            return content;
-        }
-
         public void setContent(Node content) {
+            if (this.content != null) {
+                getChildren().remove(this.content);
+            }
             this.content = content;
+
+            boolean flag = content != null;
+            if (flag) {
+                getChildren().add(content);
+            }
+            setManaged(flag);
+            setVisible(flag);
         }
 
         @Override
@@ -543,6 +672,10 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
                 content.resize(getWidth() - left - right, getHeight() - top - bottom);
                 content.relocate(left, top);
             }
+        }
+
+        public void resizeRelocate(DivisionHelper.Bound bound) {
+            resizeRelocate(bound.x, bound.y, bound.width, bound.height);
         }
     }
 

@@ -1,6 +1,5 @@
 package com.github.mouse0w0.viewpane.geometry;
 
-import javafx.geometry.Orientation;
 import javafx.geometry.Side;
 
 public enum DividerPos {
@@ -15,16 +14,10 @@ public enum DividerPos {
 
     private final Side side;
     private final boolean primary;
-    private final Orientation orientation;
 
     DividerPos(Side side, boolean primary) {
         this.side = side;
         this.primary = primary;
-        if (side == Side.TOP || side == Side.BOTTOM) {
-            orientation = primary ? Orientation.HORIZONTAL : Orientation.VERTICAL;
-        } else {
-            orientation = primary ? Orientation.VERTICAL : Orientation.HORIZONTAL;
-        }
     }
 
     public Side getSide() {
@@ -33,9 +26,5 @@ public enum DividerPos {
 
     public boolean isPrimary() {
         return primary;
-    }
-
-    public Orientation getOrientation() {
-        return orientation;
     }
 }
