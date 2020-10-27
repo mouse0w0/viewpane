@@ -503,10 +503,14 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
     }
 
     static class TabButton extends ButtonBase {
+        private static final PseudoClass SELECTED_PSEUDO_CLASS =
+                PseudoClass.getPseudoClass("selected");
+
         private final ViewTab tab;
 
         private final InvalidationListener graphicsInvalidationListener = observable -> updateGraphic();
         private final InvalidationListener viewGroupInvalidationListener = observable -> updatePos();
+        private final InvalidationListener selectedInvalidationListener = observable -> pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, getTab().isSelected());
 
         public TabButton(ViewTab tab) {
             this.tab = tab;
@@ -517,8 +521,12 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
             tab.graphicProperty().addListener(new WeakInvalidationListener(graphicsInvalidationListener));
             tab.viewGroupProperty().addListener(new WeakInvalidationListener(viewGroupInvalidationListener));
+            tab.selectedProperty().addListener(new WeakInvalidationListener(selectedInvalidationListener));
+
             updatePos();
             updateGraphic();
+
+            pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, tab.isSelected());
         }
 
         public ViewTab getTab() {

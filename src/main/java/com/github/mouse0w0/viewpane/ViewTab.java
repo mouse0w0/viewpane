@@ -2,6 +2,7 @@ package com.github.mouse0w0.viewpane;
 
 import javafx.beans.property.*;
 import javafx.scene.Node;
+import javafx.scene.control.SingleSelectionModel;
 
 public class ViewTab {
 
@@ -88,7 +89,20 @@ public class ViewTab {
 
     public final BooleanProperty selectedProperty() {
         if (selected == null) {
-            selected = new SimpleBooleanProperty(this, "selected");
+            selected = new SimpleBooleanProperty(this, "selected") {
+                @Override
+                protected void invalidated() {
+                    ViewGroup viewGroup = getViewGroup();
+                    if (viewGroup != null) {
+                        SingleSelectionModel<ViewTab> selectionModel = viewGroup.getSelectionModel();
+                        if (isSelected()) {
+                            selectionModel.select(ViewTab.this);
+                        } else if (selectionModel.getSelectedItem() == ViewTab.this) {
+                            selectionModel.clearSelection();
+                        }
+                    }
+                }
+            };
         }
         return selected;
     }

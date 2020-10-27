@@ -5,3 +5,7 @@
 .tab-button:hover {
     -fx-background-color: #cccccc;
 }
+
+.tab-button:selected {
+    -fx-background-color: #aaaaaa;
+}

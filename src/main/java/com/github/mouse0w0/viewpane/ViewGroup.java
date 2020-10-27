@@ -100,6 +100,7 @@ public class ViewGroup {
 
         @Override
         protected ViewTab getModelItem(int index) {
+            if (index < 0 || index > getItemCount()) return null;
             return viewGroup.getTabs().get(index);
         }
 
