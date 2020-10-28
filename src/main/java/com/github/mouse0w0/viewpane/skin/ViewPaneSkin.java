@@ -291,8 +291,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
                 PseudoClass.getPseudoClass("left"),
                 PseudoClass.getPseudoClass("right")};
 
-        private final Side side;
-
         private TabButtonBar topLeftBar;
         private TabButtonBar bottomRightBar;
 
@@ -317,8 +315,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
 
         SideBar(Side side) {
-            this.side = side;
-
             setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
 
             getStyleClass().setAll("side-bar");
@@ -337,27 +333,19 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             if (side.isVertical()) setRotate(90);
         }
 
-        public Side getSide() {
-            return side;
-        }
-
         @Override
         protected double computePrefWidth(double height) {
-            double left = snappedLeftInset();
-            double right = snappedRightInset();
             double width = 0;
             for (Node child : getChildren()) {
                 if (child.isManaged()) {
                     width += snapSize(child.prefWidth(-1));
                 }
             }
-            return left + width + right;
+            return snappedLeftInset() + width + snappedRightInset();
         }
 
         @Override
         protected double computePrefHeight(double width) {
-            double top = snappedTopInset();
-            double bottom = snappedBottomInset();
             double height = 0;
             for (Node child : getChildren()) {
                 if (child.isManaged()) {
@@ -365,7 +353,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
                     if (childHeight > height) height = childHeight;
                 }
             }
-            return top + height + bottom;
+            return snappedTopInset() + height + snappedBottomInset();
         }
 
         @Override
@@ -475,21 +463,17 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
         @Override
         protected double computePrefWidth(double height) {
-            double left = snappedLeftInset();
-            double right = snappedRightInset();
             double width = 0;
             for (Node child : getChildren()) {
                 if (child.isManaged()) {
                     width += snapSize(child.prefWidth(-1));
                 }
             }
-            return left + width + right;
+            return snappedLeftInset() + width + snappedRightInset();
         }
 
         @Override
         protected double computePrefHeight(double width) {
-            double top = snappedTopInset();
-            double bottom = snappedBottomInset();
             double height = 0;
             for (Node child : getChildren()) {
                 if (child.isManaged()) {
@@ -497,7 +481,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
                     if (childHeight > height) height = childHeight;
                 }
             }
-            return top + height + bottom;
+            return snappedTopInset() + height + snappedBottomInset();
         }
 
         @Override
@@ -534,7 +518,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
     }
 
     static class DivisionArea extends Region {
-
         private final ViewPaneSkin viewPaneSkin;
         private final LayoutHelper layoutHelper;
 
@@ -637,16 +620,15 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         private double position;
 
         private double size;
-        private double max = 1;
         private double min = 0;
+        private double max = 1;
 
         private double initialPos;
         private double mousePos;
 
         public ContentDivider(ViewPane.Divider peer) {
             this.peer = peer;
-
-            setPosition(peer.getPosition());
+            this.position = peer.getPosition();
 
             getStyleClass().setAll("divider");
 
@@ -690,11 +672,13 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             return isVertical() ? prefWidth(-1) : prefHeight(-1);
         }
 
-        public void updateParentSize(double width, double height) {
+        public void updateParentSize(double width, double height, double previousPos, double nextPos) {
             size = isVertical() ? width : height;
             double halfWidth = getDividerWidth() / 2;
-            min = halfWidth / size;
-            max = (size - halfWidth) / size;
+            double previous = (size * previousPos + halfWidth) / size;
+            double next = (size * nextPos - halfWidth) / size;
+            min = Math.max(previous, halfWidth / size);
+            max = Math.min(next, (size - halfWidth) / size);
             setPosition(getPosition());
         }
 
@@ -767,7 +751,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
         private final InvalidationListener graphicsInvalidationListener = observable -> updateGraphic();
         private final InvalidationListener viewGroupInvalidationListener = observable -> updatePos();
-        private final InvalidationListener selectedInvalidationListener = observable -> pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, getTab().isSelected());
+        private final InvalidationListener selectedInvalidationListener = observable -> updateSelected();
 
         public TabButton(ViewTab tab) {
             this.tab = tab;
@@ -782,8 +766,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
             updatePos();
             updateGraphic();
-
-            pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, tab.isSelected());
+            updateSelected();
         }
 
         public ViewTab getTab() {
@@ -817,6 +800,10 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
                 graphic.setRotate(0);
                 setTextAlignment(TextAlignment.LEFT);
             }
+        }
+
+        private void updateSelected() {
+            pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, tab.isSelected());
         }
 
         @Override

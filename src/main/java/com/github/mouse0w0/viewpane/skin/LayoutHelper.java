@@ -47,9 +47,9 @@ class LayoutHelper {
             return type.getSide() == Side.TOP || type.getSide() == Side.LEFT ? 0 : 1;
         }
 
-        public void updateParentSize(double width, double height) {
+        public void updateParentSize(double width, double height, double previousPos, double nextPos) {
             if (isManaged()) {
-                peer.updateParentSize(width, height);
+                peer.updateParentSize(width, height, previousPos, nextPos);
             }
         }
 
@@ -76,8 +76,8 @@ class LayoutHelper {
         }
 
         void update(double x, double y, double width, double height, boolean snapToPixel) {
-            topDivider.updateParentSize(width, height);
-            bottomDivider.updateParentSize(width, height);
+            topDivider.updateParentSize(width, height, 0, bottomDivider.getPosition());
+            bottomDivider.updateParentSize(width, height, topDivider.getPosition(), 1);
 
             double topDividerHeight = topDivider.getWidth();
             double topDividerY = height * topDivider.getPosition();
@@ -117,8 +117,8 @@ class LayoutHelper {
         }
 
         public void update(double x, double y, double width, double height, boolean snapToPixel) {
-            leftDivider.updateParentSize(width, height);
-            rightDivider.updateParentSize(width, height);
+            leftDivider.updateParentSize(width, height, 0, rightDivider.getPosition());
+            rightDivider.updateParentSize(width, height, leftDivider.getPosition(), 1);
 
             double leftDividerWidth = leftDivider.getWidth();
             double leftDividerX = width * leftDivider.getPosition();
@@ -160,7 +160,7 @@ class LayoutHelper {
         }
 
         public void update(double x, double y, double width, double height, boolean snapToPixel) {
-            divider.updateParentSize(width, height);
+            divider.updateParentSize(width, height, 0, 1);
 
             if (leftTop.isManaged() && rightBottom.isManaged()) {
                 double dividerWidth = divider.getWidth();

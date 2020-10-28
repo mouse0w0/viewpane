@@ -104,6 +104,10 @@ public class ViewPane extends Control {
         return divider;
     }
 
+    public final void setDividerPosition(DividerType type, double position) {
+        getDivider(type).setPosition(position);
+    }
+
     @Override
     public String getUserAgentStylesheet() {
         return ViewPane.class.getResource("ViewPane.css").toExternalForm();
