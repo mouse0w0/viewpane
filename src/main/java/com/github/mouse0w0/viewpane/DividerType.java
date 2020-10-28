@@ -1,4 +1,4 @@
-package com.github.mouse0w0.viewpane.geometry;
+package com.github.mouse0w0.viewpane;
 
 import javafx.geometry.Orientation;
 import javafx.geometry.Side;

@@ -1,5 +1,8 @@
-package com.github.mouse0w0.viewpane;
+package com.github.mouse0w0.viewpane.example;
 
+import com.github.mouse0w0.viewpane.ViewGroup;
+import com.github.mouse0w0.viewpane.ViewPane;
+import com.github.mouse0w0.viewpane.ViewTab;
 import com.github.mouse0w0.viewpane.geometry.EightPos;
 import javafx.application.Application;
 import javafx.scene.Scene;

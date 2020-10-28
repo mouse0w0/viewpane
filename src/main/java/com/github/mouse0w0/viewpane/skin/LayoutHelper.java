@@ -1,6 +1,6 @@
 package com.github.mouse0w0.viewpane.skin;
 
-import com.github.mouse0w0.viewpane.geometry.DividerType;
+import com.github.mouse0w0.viewpane.DividerType;
 import com.github.mouse0w0.viewpane.geometry.EightPos;
 import javafx.geometry.Orientation;
 import javafx.geometry.Side;

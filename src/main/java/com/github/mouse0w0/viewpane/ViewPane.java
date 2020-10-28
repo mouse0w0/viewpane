@@ -1,6 +1,5 @@
 package com.github.mouse0w0.viewpane;
 
-import com.github.mouse0w0.viewpane.geometry.DividerType;
 import com.github.mouse0w0.viewpane.geometry.EightPos;
 import com.github.mouse0w0.viewpane.skin.ViewPaneSkin;
 import javafx.beans.property.DoubleProperty;

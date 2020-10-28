@@ -1,9 +1,9 @@
 package com.github.mouse0w0.viewpane.skin;
 
+import com.github.mouse0w0.viewpane.DividerType;
 import com.github.mouse0w0.viewpane.ViewGroup;
 import com.github.mouse0w0.viewpane.ViewPane;
 import com.github.mouse0w0.viewpane.ViewTab;
-import com.github.mouse0w0.viewpane.geometry.DividerType;
 import com.github.mouse0w0.viewpane.geometry.EightPos;
 import com.sun.javafx.scene.control.behavior.ButtonBehavior;
 import com.sun.javafx.scene.control.skin.LabeledSkinBase;
@@ -285,12 +285,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
     }
 
     static class SideBar extends Region {
-        private static final PseudoClass[] SIDE_PSEUDO_CLASSES = {
-                PseudoClass.getPseudoClass("top"),
-                PseudoClass.getPseudoClass("bottom"),
-                PseudoClass.getPseudoClass("left"),
-                PseudoClass.getPseudoClass("right")};
-
         private TabButtonBar topLeftBar;
         private TabButtonBar bottomRightBar;
 
@@ -318,7 +312,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
 
             getStyleClass().setAll("side-bar");
-            pseudoClassStateChanged(SIDE_PSEUDO_CLASSES[side.ordinal()], true);
+            pseudoClassStateChanged(StyleHelper.getPseudoClass(side), true);
 
             getChildren().addListener(new InvalidationListener() {
                 @Override
@@ -381,7 +375,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
     }
 
     static class TabButtonBar extends Region {
-
         private final ViewPaneSkin viewPaneSkin;
         private final ViewGroup viewGroup;
 
@@ -429,6 +422,8 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             this.viewGroup = viewGroup;
 
             getStyleClass().setAll("tab-button-bar");
+
+            pseudoClassStateChanged(StyleHelper.getPseudoClass(viewGroup.getPos()), true);
 
             viewGroup.getTabs().forEach(this::addViewTab);
             viewGroup.getTabs().addListener(tabChangeListener);
@@ -634,6 +629,11 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
             setCursor(isVertical() ? Cursor.H_RESIZE : Cursor.V_RESIZE);
 
+            DividerType type = peer.getType();
+            pseudoClassStateChanged(StyleHelper.getPseudoClass(type), true);
+            pseudoClassStateChanged(StyleHelper.getPseudoClass(type.getSide()), true);
+            pseudoClassStateChanged(StyleHelper.getPseudoClass(type.getOrientation()), true);
+
             addEventHandler(MouseEvent.ANY, Event::consume);
             setOnMousePressed(event -> {
                 initialPos = getPosition();
@@ -694,12 +694,16 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
     }
 
     static class ContentArea extends Region {
-        private final EightPos pos;
+        public static final PseudoClass CENTER = PseudoClass.getPseudoClass("center");
 
         private Node content;
 
         public ContentArea(EightPos pos) {
-            this.pos = pos;
+            if (pos != null) {
+                pseudoClassStateChanged(StyleHelper.getPseudoClass(pos), true);
+            } else {
+                pseudoClassStateChanged(CENTER, true);
+            }
 
             getStyleClass().setAll("content-area");
         }
