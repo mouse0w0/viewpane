@@ -3,7 +3,8 @@ package com.github.mouse0w0.viewpane;
 import com.github.mouse0w0.viewpane.geometry.EightPos;
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.stage.Stage;
 
 public class ViewPaneTest extends Application {
@@ -12,11 +13,15 @@ public class ViewPaneTest extends Application {
         ViewPane pane = new ViewPane();
 
         ViewGroup leftTop = pane.getViewGroup(EightPos.LEFT_TOP);
-        ViewTab tab1 = new ViewTab("First");
-        tab1.setContent(new TextField("Hello World"));
-        ViewTab tab2 = new ViewTab("Second");
-        ViewTab tab3 = new ViewTab("Third");
-        leftTop.getTabs().addAll(tab1, tab2, tab3);
+        ViewTab explorer = new ViewTab("Explorer");
+        TreeView<String> treeView = new TreeView<>();
+
+        TreeItem<String> root = new TreeItem<>();
+        root.getChildren().addAll(new TreeItem<>("Hello"), new TreeItem<>("World"));
+        treeView.setRoot(root);
+
+        leftTop.getTabs().addAll(explorer);
+        explorer.setContent(treeView);
 
         ViewGroup leftBottom = pane.getViewGroup(EightPos.LEFT_BOTTOM);
         leftBottom.getTabs().addAll(new ViewTab("LEFT_BOTTOM"));

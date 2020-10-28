@@ -3,7 +3,7 @@ package com.github.mouse0w0.viewpane.skin;
 import com.github.mouse0w0.viewpane.ViewGroup;
 import com.github.mouse0w0.viewpane.ViewPane;
 import com.github.mouse0w0.viewpane.ViewTab;
-import com.github.mouse0w0.viewpane.geometry.DividerPos;
+import com.github.mouse0w0.viewpane.geometry.DividerType;
 import com.github.mouse0w0.viewpane.geometry.EightPos;
 import com.sun.javafx.scene.control.behavior.ButtonBehavior;
 import com.sun.javafx.scene.control.skin.LabeledSkinBase;
@@ -16,13 +16,16 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.HPos;
 import javafx.geometry.Side;
 import javafx.geometry.VPos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.Skin;
 import javafx.scene.control.SkinBase;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.text.TextAlignment;
 
@@ -36,7 +39,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         sideBarArea = new SideBarArea();
         getChildren().add(sideBarArea);
 
-        divisionArea = new DivisionArea();
+        divisionArea = new DivisionArea(this);
         sideBarArea.setCenter(divisionArea);
 
         getViewGroups().forEach(this::createTabButtonBar);
@@ -58,7 +61,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             }
         });
 
-        control.contentProperty().addListener(observable -> divisionArea.setContent(control.getContent()));
+        control.contentProperty().addListener(observable -> divisionArea.setCenter(control.getContent()));
     }
 
     public ObservableList<ViewGroup> getViewGroups() {
@@ -532,7 +535,8 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
     static class DivisionArea extends Region {
 
-        private final DivisionHelper divisionHelper;
+        private final ViewPaneSkin viewPaneSkin;
+        private final LayoutHelper layoutHelper;
 
         private final ContentArea[] views = new ContentArea[8];
         private ContentArea center;
@@ -540,18 +544,11 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
         private boolean performingLayout = false;
 
-        public DivisionArea() {
-            this.divisionHelper = new DivisionHelper();
+        public DivisionArea(ViewPaneSkin viewPaneSkin) {
+            this.viewPaneSkin = viewPaneSkin;
+            this.layoutHelper = new LayoutHelper();
 
             getStyleClass().setAll("division-area");
-        }
-
-        public void setContent(Node content) {
-            if (center == null) {
-                center = new ContentArea(null);
-                getChildren().add(center);
-            }
-            center.setContent(content);
         }
 
         public void setView(EightPos pos, Node content) {
@@ -562,7 +559,58 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
                 views[pos.ordinal()] = view;
             }
             view.setContent(content);
-            divisionHelper.bounds[pos.ordinal()].enable = content != null;
+            layoutHelper.areas[pos.ordinal()].peer = view;
+            updateDivider(pos);
+        }
+
+        public void setCenter(Node content) {
+            if (center == null) {
+                center = new ContentArea(null);
+                getChildren().add(center);
+            }
+            center.setContent(content);
+            layoutHelper.center.peer = center;
+        }
+
+        private void updateDivider(EightPos pos) {
+            Side primary = pos.getPrimary();
+            if (primary == Side.TOP) {
+                int viewCount = getManagedViewCount(EightPos.TOP_LEFT, EightPos.TOP_RIGHT);
+                setDivider(DividerType.TOP_PRIMARY, viewCount >= 1);
+                setDivider(DividerType.TOP_SECONDARY, viewCount == 2);
+            } else if (primary == Side.LEFT) {
+                int viewCount = getManagedViewCount(EightPos.LEFT_TOP, EightPos.LEFT_BOTTOM);
+                setDivider(DividerType.LEFT_PRIMARY, viewCount >= 1);
+                setDivider(DividerType.LEFT_SECONDARY, viewCount == 2);
+            } else if (primary == Side.BOTTOM) {
+                int viewCount = getManagedViewCount(EightPos.BOTTOM_LEFT, EightPos.BOTTOM_RIGHT);
+                setDivider(DividerType.BOTTOM_PRIMARY, viewCount >= 1);
+                setDivider(DividerType.BOTTOM_SECONDARY, viewCount == 2);
+            } else {
+                int viewCount = getManagedViewCount(EightPos.RIGHT_TOP, EightPos.RIGHT_BOTTOM);
+                setDivider(DividerType.RIGHT_PRIMARY, viewCount >= 1);
+                setDivider(DividerType.RIGHT_SECONDARY, viewCount == 2);
+            }
+        }
+
+        private void setDivider(DividerType type, boolean enable) {
+            ContentDivider divider = dividers[type.ordinal()];
+            if (divider == null) {
+                divider = new ContentDivider(viewPaneSkin.getSkinnable().getDivider(type));
+                dividers[type.ordinal()] = divider;
+                layoutHelper.dividers[type.ordinal()].peer = divider;
+                getChildren().add(divider);
+            }
+            divider.setManaged(enable);
+            divider.setVisible(enable);
+        }
+
+        private int getManagedViewCount(EightPos a, EightPos b) {
+            int result = 0;
+            LayoutHelper.Area[] areas = layoutHelper.areas;
+            if (areas[a.ordinal()].isManaged()) result++;
+            if (areas[b.ordinal()].isManaged()) result++;
+            return result;
         }
 
         @Override
@@ -576,42 +624,78 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             double right = snappedRightInset();
             double width = getWidth();
             double height = getHeight();
-            double contentWidth = width - left - right;
-            double contentHeight = height - top - bottom;
 
-            divisionHelper.update(left, top, contentWidth, contentHeight, isSnapToPixel());
-
-            // 处理分割线
-            for (int i = 0; i < 8; i++) {
-
-            }
-
-            // 处理视图
-            for (int i = 0; i < 8; i++) {
-                ContentArea view = views[i];
-                if (view != null && view.isManaged()) {
-                    view.resizeRelocate(divisionHelper.bounds[i]);
-                }
-            }
-
-            // 处理中部内容
-            if (center != null && center.isManaged()) {
-                center.resizeRelocate(divisionHelper.center);
-            }
+            layoutHelper.layout(left, top, width - left - right, height - top - bottom, isSnapToPixel());
 
             performingLayout = false;
         }
     }
 
     static class ContentDivider extends Region {
-        private ViewPane.Divider divider;
+        private final ViewPane.Divider peer;
 
-        private final DividerPos pos;
+        private double position;
 
-        public ContentDivider(DividerPos pos) {
-            this.pos = pos;
+        private double size;
+        private double max = 1;
+        private double min = 0;
+
+        private double initialPos;
+        private double mousePos;
+
+        public ContentDivider(ViewPane.Divider peer) {
+            this.peer = peer;
+
+            setPosition(peer.getPosition());
 
             getStyleClass().setAll("divider");
+
+            setCursor(isVertical() ? Cursor.H_RESIZE : Cursor.V_RESIZE);
+
+            addEventHandler(MouseEvent.ANY, Event::consume);
+            setOnMousePressed(event -> {
+                initialPos = getPosition();
+                mousePos = isVertical() ? event.getSceneX() : event.getSceneY();
+            });
+            setOnMouseDragged(event -> {
+                double nowMousePos = isVertical() ? event.getSceneX() : event.getSceneY();
+                double delta = nowMousePos - mousePos;
+                setPosition(initialPos + delta / size);
+            });
+
+            peer.positionProperty().addListener(observable -> {
+                setPosition(peer.getPosition());
+                requestParentLayout();
+            });
+        }
+
+        public boolean isVertical() {
+            return peer.getType().isVertical();
+        }
+
+        public double getPosition() {
+            return position;
+        }
+
+        private void setPosition(double position) {
+            this.position = clamp(position, min, max);
+            this.peer.setPosition(getPosition());
+        }
+
+        private static double clamp(double value, double min, double max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        public double getDividerWidth() {
+            return isVertical() ? prefWidth(-1) : prefHeight(-1);
+        }
+
+        public void updateParentSize(double width, double height) {
+            size = isVertical() ? width : height;
+            double halfWidth = getDividerWidth() / 2;
+            min = halfWidth / size;
+            max = (size - halfWidth) / size;
+            setPosition(getPosition());
         }
 
         @Override
@@ -672,10 +756,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
                 content.resize(getWidth() - left - right, getHeight() - top - bottom);
                 content.relocate(left, top);
             }
-        }
-
-        public void resizeRelocate(DivisionHelper.Bound bound) {
-            resizeRelocate(bound.x, bound.y, bound.width, bound.height);
         }
     }
 
