@@ -9,7 +9,6 @@ import com.sun.javafx.scene.control.behavior.ButtonBehavior;
 import com.sun.javafx.scene.control.skin.LabeledSkinBase;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.WeakInvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
@@ -23,11 +22,11 @@ import javafx.geometry.VPos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonBase;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Skin;
 import javafx.scene.control.SkinBase;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
-import javafx.scene.text.TextAlignment;
 
 public class ViewPaneSkin extends SkinBase<ViewPane> {
     private final SideBarArea sideBarArea;
@@ -741,67 +740,18 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
     }
 
     static class TabButton extends ButtonBase {
-        private static final PseudoClass SELECTED_PSEUDO_CLASS =
-                PseudoClass.getPseudoClass("selected");
+
 
         private final ViewTab tab;
-
-        private final InvalidationListener graphicsInvalidationListener = observable -> updateGraphic();
-        private final InvalidationListener viewGroupInvalidationListener = observable -> updatePos();
-        private final InvalidationListener selectedInvalidationListener = observable -> updateSelected();
 
         public TabButton(ViewTab tab) {
             this.tab = tab;
 
             getStyleClass().setAll("view-tab-button");
-
-            textProperty().bind(tab.textProperty());
-            contextMenuProperty().bind(tab.contextMenuProperty());
-
-            tab.graphicProperty().addListener(new WeakInvalidationListener(graphicsInvalidationListener));
-            tab.viewGroupProperty().addListener(new WeakInvalidationListener(viewGroupInvalidationListener));
-            tab.selectedProperty().addListener(new WeakInvalidationListener(selectedInvalidationListener));
-
-            updatePos();
-            updateGraphic();
-            updateSelected();
         }
 
         public ViewTab getTab() {
             return tab;
-        }
-
-        public EightPos getPos() {
-            ViewGroup viewGroup = tab.getViewGroup();
-            assert viewGroup != null;
-            return viewGroup.getPos();
-        }
-
-        private void updatePos() {
-            if (getPos().getPrimary() == Side.LEFT) {
-                setRotate(180);
-            } else {
-                setRotate(0);
-            }
-            updateGraphic();
-        }
-
-        private void updateGraphic() {
-            Node graphic = tab.getGraphic();
-            setGraphic(graphic);
-
-            if (graphic == null) return;
-            if (getPos().getPrimary() == Side.LEFT) {
-                graphic.setRotate(90);
-                setTextAlignment(TextAlignment.RIGHT);
-            } else {
-                graphic.setRotate(0);
-                setTextAlignment(TextAlignment.LEFT);
-            }
-        }
-
-        private void updateSelected() {
-            pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, tab.isSelected());
         }
 
         @Override
@@ -819,9 +769,76 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
     }
 
     static class TabButtonSkin extends LabeledSkinBase<TabButton, ButtonBehavior<TabButton>> {
+        private static final PseudoClass SELECTED_PSEUDO_CLASS =
+                PseudoClass.getPseudoClass("selected");
 
-        public TabButtonSkin(TabButton labeled) {
-            super(labeled, new ButtonBehavior<>(labeled));
+        private final ViewTab tab;
+
+        public TabButtonSkin(TabButton tabButton) {
+            super(tabButton, new ButtonBehavior<>(tabButton));
+
+            this.tab = tabButton.getTab();
+
+            tabButton.textProperty().bind(tab.textProperty());
+            tabButton.graphicProperty().bind(tab.graphicProperty());
+            tabButton.contextMenuProperty().bind(tab.contextMenuProperty());
+
+            registerChangeListener(tab.viewGroupProperty(), "VIEW_GROUP");
+            registerChangeListener(tab.selectedProperty(), "SELECTED");
+
+            updatePos();
+            updateSelected();
+        }
+
+        @Override
+        protected void handleControlPropertyChanged(String p) {
+            if ("GRAPHIC".equals(p)) {
+                updateGraphic();
+            } else if ("SELECTED".equals(p)) {
+                updateSelected();
+            } else if ("VIEW_GROUP".equals(p)) {
+                updatePos();
+            }
+            super.handleControlPropertyChanged(p);
+        }
+
+        public EightPos getPos() {
+            return tab.getViewGroup().getPos();
+        }
+
+        private void updatePos() {
+            if (getPos().getPrimary() == Side.LEFT) {
+                getSkinnable().setRotate(180);
+            } else {
+                getSkinnable().setRotate(0);
+            }
+            updateGraphic();
+        }
+
+        private void updateGraphic() {
+            Node graphic = tab.getGraphic();
+
+            if (graphic == null) return;
+            Side side = getPos().getPrimary();
+            if (side == Side.LEFT) {
+                graphic.setRotate(90);
+                getSkinnable().setContentDisplay(ContentDisplay.RIGHT);
+            } else if (side == Side.RIGHT) {
+                graphic.setRotate(-90);
+                getSkinnable().setContentDisplay(ContentDisplay.LEFT);
+            } else {
+                graphic.setRotate(0);
+                getSkinnable().setContentDisplay(ContentDisplay.LEFT);
+            }
+        }
+
+        private void updateSelected() {
+            pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, tab.isSelected());
+        }
+
+        @Override
+        public void dispose() {
+            super.dispose();
         }
     }
 
