@@ -1,11 +1,15 @@
 package com.github.mouse0w0.viewpane;
 
 import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.input.ContextMenuEvent;
+
+import java.util.HashMap;
 
 public class ViewTab {
 
@@ -169,5 +173,30 @@ public class ViewTab {
 
     public final void setSelected(boolean selected) {
         selectedProperty().set(selected);
+    }
+
+    // Properties
+    private ObservableMap<Object, Object> properties;
+
+    public final ObservableMap<Object, Object> getProperties() {
+        if (properties == null) {
+            properties = FXCollections.observableMap(new HashMap<>());
+        }
+        return properties;
+    }
+
+    public boolean hasProperties() {
+        return properties != null && !properties.isEmpty();
+    }
+
+    // UserData
+    private static final Object USER_DATA_KEY = new Object();
+
+    public void setUserData(Object value) {
+        getProperties().put(USER_DATA_KEY, value);
+    }
+
+    public Object getUserData() {
+        return getProperties().get(USER_DATA_KEY);
     }
 }
