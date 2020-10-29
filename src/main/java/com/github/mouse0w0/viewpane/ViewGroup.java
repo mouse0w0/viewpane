@@ -6,7 +6,10 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.scene.control.SingleSelectionModel;
+
+import java.util.HashMap;
 
 public class ViewGroup {
 
@@ -108,5 +111,30 @@ public class ViewGroup {
         protected int getItemCount() {
             return viewGroup.getTabs().size();
         }
+    }
+
+    // Properties
+    private ObservableMap<Object, Object> properties;
+
+    public final ObservableMap<Object, Object> getProperties() {
+        if (properties == null) {
+            properties = FXCollections.observableMap(new HashMap<>());
+        }
+        return properties;
+    }
+
+    public boolean hasProperties() {
+        return properties != null && !properties.isEmpty();
+    }
+
+    // UserData
+    private static final Object USER_DATA_KEY = new Object();
+
+    public void setUserData(Object value) {
+        getProperties().put(USER_DATA_KEY, value);
+    }
+
+    public Object getUserData() {
+        return getProperties().get(USER_DATA_KEY);
     }
 }
