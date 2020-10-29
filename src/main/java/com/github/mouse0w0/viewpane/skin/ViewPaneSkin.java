@@ -61,6 +61,8 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             }
         });
 
+        Node center = getSkinnable().getCenter();
+        if (center != null) divisionArea.setCenter(center);
         control.centerProperty().addListener(observable -> divisionArea.setCenter(getSkinnable().getCenter()));
     }
 
@@ -424,6 +426,8 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             viewGroup.getTabs().forEach(this::addViewTab);
             viewGroup.getTabs().addListener(tabChangeListener);
 
+            ViewTab selectedItem = viewGroup.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) setView(selectedItem.getContent());
             viewGroup.getSelectionModel().selectedItemProperty().addListener(selectedItemListener);
         }
 
