@@ -220,7 +220,7 @@ class LayoutHelper {
                     double dividerY = height * divider.getPosition();
                     double topHeight = snapToPixel(dividerY - halfDividerWidth, snapToPixel);
                     leftTop.layoutInArea(x, y, width, topHeight);
-                    divider.layoutInArea(x, y + topHeight, width, height);
+                    divider.layoutInArea(x, y + topHeight, width, dividerWidth);
                     rightBottom.layoutInArea(x, y + topHeight + dividerWidth, width, height - topHeight - dividerWidth);
                 }
             } else {
