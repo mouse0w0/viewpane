@@ -28,6 +28,8 @@ import javafx.scene.control.SkinBase;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 
+import java.util.Iterator;
+
 public class ViewPaneSkin extends SkinBase<ViewPane> {
     private final SideBarArea sideBarArea;
     private final DivisionArea divisionArea;
@@ -392,7 +394,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
                 }
             }
         };
-
         private final ChangeListener<ViewTab> selectedItemListener = new ChangeListener<ViewTab>() {
             @Override
             public void changed(ObservableValue<? extends ViewTab> observable, ViewTab oldValue, ViewTab newValue) {
@@ -406,7 +407,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
                 }
             }
         };
-
         private final ChangeListener<Node> tabContentListener = new ChangeListener<Node>() {
             @Override
             public void changed(ObservableValue<? extends Node> observable, Node oldValue, Node newValue) {
@@ -443,7 +443,15 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
 
         public void removeViewTab(ViewTab viewTab) {
-            getChildren().removeIf(node -> ((TabButton) node).getTab() == viewTab);
+            Iterator<Node> iterator = getChildren().iterator();
+            while (iterator.hasNext()) {
+                TabButton tabButton = (TabButton) iterator.next();
+                if (tabButton.getTab() == viewTab) {
+                    tabButton.getSkin().dispose();
+                    iterator.remove();
+                    return;
+                }
+            }
         }
 
         public void dispose() {
@@ -740,8 +748,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
     }
 
     static class TabButton extends ButtonBase {
-
-
         private final ViewTab tab;
 
         public TabButton(ViewTab tab) {
@@ -834,11 +840,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
         private void updateSelected() {
             pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, tab.isSelected());
-        }
-
-        @Override
-        public void dispose() {
-            super.dispose();
         }
     }
 
