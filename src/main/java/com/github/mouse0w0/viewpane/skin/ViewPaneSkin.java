@@ -756,6 +756,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             getStyleClass().setAll("view-tab-button");
 
             textProperty().bind(tab.textProperty());
+            contextMenuProperty().bind(tab.contextMenuProperty());
 
             tab.graphicProperty().addListener(new WeakInvalidationListener(graphicsInvalidationListener));
             tab.viewGroupProperty().addListener(new WeakInvalidationListener(viewGroupInvalidationListener));
