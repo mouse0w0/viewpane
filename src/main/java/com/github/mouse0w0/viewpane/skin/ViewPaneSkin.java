@@ -788,6 +788,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             tabButton.textProperty().bind(tab.textProperty());
             tabButton.graphicProperty().bind(tab.graphicProperty());
             tabButton.contextMenuProperty().bind(tab.contextMenuProperty());
+            tabButton.onContextMenuRequestedProperty().bind(tab.onContextMenuRequestedProperty());
 
             registerChangeListener(tab.viewGroupProperty(), "VIEW_GROUP");
             registerChangeListener(tab.selectedProperty(), "SELECTED");

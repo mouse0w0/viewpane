@@ -1,9 +1,11 @@
 package com.github.mouse0w0.viewpane;
 
 import javafx.beans.property.*;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SingleSelectionModel;
+import javafx.scene.input.ContextMenuEvent;
 
 public class ViewTab {
 
@@ -120,6 +122,23 @@ public class ViewTab {
 
     public final void setContextMenu(ContextMenu value) {
         contextMenuProperty().set(value);
+    }
+
+    public ObjectProperty<EventHandler<? super ContextMenuEvent>> onContextMenuRequested;
+
+    public final ObjectProperty<EventHandler<? super ContextMenuEvent>> onContextMenuRequestedProperty() {
+        if (onContextMenuRequested == null) {
+            onContextMenuRequested = new SimpleObjectProperty<>(this, "onContextMenuRequested");
+        }
+        return onContextMenuRequested;
+    }
+
+    public final EventHandler<? super ContextMenuEvent> getOnContextMenuRequested() {
+        return onContextMenuRequested == null ? null : onContextMenuRequested.get();
+    }
+
+    public final void setOnContextMenuRequested(EventHandler<? super ContextMenuEvent> onContextMenuRequested) {
+        onContextMenuRequestedProperty().set(onContextMenuRequested);
     }
 
     private BooleanProperty selected;
