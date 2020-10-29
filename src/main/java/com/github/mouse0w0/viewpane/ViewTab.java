@@ -8,10 +8,29 @@ import javafx.scene.control.SingleSelectionModel;
 public class ViewTab {
 
     public ViewTab() {
+        this(null, null, null);
     }
 
     public ViewTab(String text) {
-        setText(text);
+        this(text, null, null);
+    }
+
+    public ViewTab(Node graphic) {
+        this(null, graphic, null);
+    }
+
+    public ViewTab(String text, Node content) {
+        this(text, null, content);
+    }
+
+    public ViewTab(Node graphic, Node content) {
+        this(null, graphic, content);
+    }
+
+    public ViewTab(String text, Node graphic, Node content) {
+        if (text != null) setText(text);
+        if (graphic != null) setGraphic(graphic);
+        if (content != null) setContent(content);
     }
 
     private ReadOnlyObjectWrapper<ViewGroup> viewGroup;
