@@ -68,21 +68,21 @@ public class ViewPane extends Control {
         return cacheViewGroups[pos.ordinal()];
     }
 
-    private ObjectProperty<Node> content;
+    private ObjectProperty<Node> center;
 
-    public final ObjectProperty<Node> contentProperty() {
-        if (content == null) {
-            content = new SimpleObjectProperty<>(this, "content");
+    public final ObjectProperty<Node> centerProperty() {
+        if (center == null) {
+            center = new SimpleObjectProperty<>(this, "center");
         }
-        return content;
+        return center;
     }
 
-    public final Node getContent() {
-        return content.get();
+    public final Node getCenter() {
+        return center.get();
     }
 
-    public final void setContent(Node content) {
-        contentProperty().set(content);
+    public final void setCenter(Node center) {
+        centerProperty().set(center);
     }
 
     private final Divider[] cacheDividers = new Divider[8];

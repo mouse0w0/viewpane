@@ -1,12 +1,12 @@
-.tab-button {
+.view-tab-button {
     -fx-padding: 2 8 2 8;
 }
 
-.tab-button:hover {
+.view-tab-button:hover {
     -fx-background-color: #cccccc;
 }
 
-.tab-button:selected {
+.view-tab-button:selected {
     -fx-background-color: #aaaaaa;
 }
 

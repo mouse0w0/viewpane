@@ -66,13 +66,6 @@ class LayoutHelper {
             }
         }
 
-        @Deprecated
-        public void validDividerPosition(double width, double height, double previousPos, double nextPos) {
-            if (isManaged()) {
-                peer.validDividerPosition(width, height, previousPos, nextPos);
-            }
-        }
-
         public void layoutInArea(double x, double y, double width, double height) {
             if (isManaged()) {
                 peer.resizeRelocate(x, y, width, height);

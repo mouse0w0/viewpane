@@ -61,7 +61,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             }
         });
 
-        control.contentProperty().addListener(observable -> divisionArea.setCenter(control.getContent()));
+        control.centerProperty().addListener(observable -> divisionArea.setCenter(getSkinnable().getCenter()));
     }
 
     public ObservableList<ViewGroup> getViewGroups() {
@@ -220,10 +220,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
         private double computeChildPrefHeight(Node child) {
             return child != null && child.isManaged() ? snapSize(child.prefHeight(-1)) : 0;
-        }
-
-        private static double max(double a, double b, double c) {
-            return Math.max(Math.max(a, b), c);
         }
 
         @Override
@@ -664,10 +660,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             this.peer.setPosition(position);
         }
 
-        private static double clamp(double value, double min, double max) {
-            return Math.min(Math.max(value, min), max);
-        }
-
         public double getDividerWidth() {
             return isVertical() ? prefWidth(-1) : prefHeight(-1);
         }
@@ -676,17 +668,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             this.size = size;
             this.min = min;
             this.max = max;
-            setPosition(getPosition());
-        }
-
-        @Deprecated
-        public void validDividerPosition(double width, double height, double previousPos, double nextPos) {
-            size = isVertical() ? width : height;
-            double halfWidth = getDividerWidth() / 2;
-            double previous = (size * previousPos + halfWidth) / size;
-            double next = (size * nextPos - halfWidth) / size;
-            min = Math.max(previous, halfWidth / size);
-            max = Math.min(next, (size - halfWidth) / size);
             setPosition(getPosition());
         }
 
@@ -768,7 +749,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         public TabButton(ViewTab tab) {
             this.tab = tab;
 
-            getStyleClass().setAll("tab-button");
+            getStyleClass().setAll("view-tab-button");
 
             textProperty().bind(tab.textProperty());
 
@@ -837,5 +818,13 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         public TabButtonSkin(TabButton labeled) {
             super(labeled, new ButtonBehavior<>(labeled));
         }
+    }
+
+    private static double max(double a, double b, double c) {
+        return Math.max(Math.max(a, b), c);
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.min(Math.max(value, min), max);
     }
 }
