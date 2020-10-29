@@ -13,7 +13,15 @@ class LayoutHelper {
             return peer != null && peer.isManaged();
         }
 
-        public void update(double x, double y, double width, double height) {
+        public double minWidth() {
+            return isManaged() ? peer.minWidth(-1) : 0;
+        }
+
+        public double minHeight() {
+            return isManaged() ? peer.minHeight(-1) : 0;
+        }
+
+        public void layoutInArea(double x, double y, double width, double height) {
             if (isManaged()) {
                 peer.resizeRelocate(x, y, width, height);
             }
@@ -33,11 +41,16 @@ class LayoutHelper {
             return peer != null && peer.isManaged();
         }
 
-        public double getWidth() {
-            if (isManaged()) {
-                return peer.getDividerWidth();
-            }
-            return 0;
+        public DividerType getType() {
+            return type;
+        }
+
+        public boolean isVertical() {
+            return type.isVertical();
+        }
+
+        public double getDividerWidth() {
+            return isManaged() ? peer.getDividerWidth() : 0;
         }
 
         public double getPosition() {
@@ -47,13 +60,20 @@ class LayoutHelper {
             return type.getSide() == Side.TOP || type.getSide() == Side.LEFT ? 0 : 1;
         }
 
-        public void updateParentSize(double width, double height, double previousPos, double nextPos) {
+        public void validDividerPosition(double size, double min, double max) {
             if (isManaged()) {
-                peer.updateParentSize(width, height, previousPos, nextPos);
+                peer.validDividerPosition(size, min, max);
             }
         }
 
-        public void update(double x, double y, double width, double height) {
+        @Deprecated
+        public void validDividerPosition(double width, double height, double previousPos, double nextPos) {
+            if (isManaged()) {
+                peer.validDividerPosition(width, height, previousPos, nextPos);
+            }
+        }
+
+        public void layoutInArea(double x, double y, double width, double height) {
             if (isManaged()) {
                 peer.resizeRelocate(x, y, width, height);
             }
@@ -75,29 +95,38 @@ class LayoutHelper {
             this.bottom = bottom;
         }
 
-        void update(double x, double y, double width, double height, boolean snapToPixel) {
-            topDivider.updateParentSize(width, height, 0, bottomDivider.getPosition());
-            bottomDivider.updateParentSize(width, height, topDivider.getPosition(), 1);
+        public void layoutChildren(double x, double y, double width, double height, boolean snapToPixel) {
+            double topDividerWidth = topDivider.getDividerWidth();
+            double bottomDividerWidth = bottomDivider.getDividerWidth();
 
-            double topDividerHeight = topDivider.getWidth();
+            double halfTopDividerWidth = topDividerWidth / 2;
+            double halfBottomDividerWidth = bottomDividerWidth / 2;
+
+            double centerDelta = (halfTopDividerWidth + center.minHeight() + halfBottomDividerWidth) / width;
+            topDivider.validDividerPosition(height,
+                    (top.minHeight() + halfTopDividerWidth) / height,
+                    bottomDivider.getPosition() - centerDelta);
+            bottomDivider.validDividerPosition(height,
+                    topDivider.getPosition() + centerDelta,
+                    1 - (bottom.minHeight() + halfBottomDividerWidth) / height);
+
             double topDividerY = height * topDivider.getPosition();
-            double topHeight = snapToPixel(topDividerY - topDividerHeight / 2, true);
+            double topHeight = snapToPixel(topDividerY - halfTopDividerWidth, true);
 
-            double bottomDividerHeight = bottomDivider.getWidth();
             double bottomDividerY = height * bottomDivider.getPosition();
-            double bottomHeight = snapToPixel(height - bottomDividerY - bottomDividerHeight / 2, true);
+            double bottomHeight = snapToPixel(height - bottomDividerY - halfBottomDividerWidth, true);
 
-            double centerHeight = height - topHeight - topDividerHeight - bottomHeight - bottomDividerHeight;
+            double centerHeight = height - topHeight - topDividerWidth - bottomHeight - bottomDividerWidth;
 
-            top.update(x, y, width, topHeight, snapToPixel);
+            top.layoutChildren(x, y, width, topHeight, snapToPixel);
             y += topHeight;
-            topDivider.update(x, y, width, topDividerHeight);
-            y += topDividerHeight;
-            center.update(x, y, width, centerHeight, snapToPixel);
+            topDivider.layoutInArea(x, y, width, topDividerWidth);
+            y += topDividerWidth;
+            center.layoutChildren(x, y, width, centerHeight, snapToPixel);
             y += centerHeight;
-            bottomDivider.update(x, y, width, bottomDividerHeight);
-            y += bottomDividerHeight;
-            bottom.update(x, y, width, bottomHeight, snapToPixel);
+            bottomDivider.layoutInArea(x, y, width, bottomDividerWidth);
+            y += bottomDividerWidth;
+            bottom.layoutChildren(x, y, width, bottomHeight, snapToPixel);
         }
     }
 
@@ -116,29 +145,42 @@ class LayoutHelper {
             this.right = right;
         }
 
-        public void update(double x, double y, double width, double height, boolean snapToPixel) {
-            leftDivider.updateParentSize(width, height, 0, rightDivider.getPosition());
-            rightDivider.updateParentSize(width, height, leftDivider.getPosition(), 1);
+        public double minHeight() {
+            return max(left.minHeight(), center.minHeight(), right.minHeight());
+        }
 
-            double leftDividerWidth = leftDivider.getWidth();
+        public void layoutChildren(double x, double y, double width, double height, boolean snapToPixel) {
+            double leftDividerWidth = leftDivider.getDividerWidth();
+            double rightDividerWidth = rightDivider.getDividerWidth();
+
+            double halfLeftDividerWidth = leftDividerWidth / 2;
+            double halfRightDividerWidth = rightDividerWidth / 2;
+
+            double centerDelta = (halfLeftDividerWidth + center.minWidth() + halfRightDividerWidth) / width;
+            leftDivider.validDividerPosition(width,
+                    (left.minWidth() + halfLeftDividerWidth) / width,
+                    rightDivider.getPosition() - centerDelta);
+            rightDivider.validDividerPosition(width,
+                    leftDivider.getPosition() + centerDelta,
+                    1 - (right.minWidth() + halfRightDividerWidth) / width);
+
             double leftDividerX = width * leftDivider.getPosition();
-            double leftWidth = snapToPixel(leftDividerX - leftDividerWidth / 2, true);
+            double leftWidth = snapToPixel(leftDividerX - halfLeftDividerWidth, true);
 
-            double rightDividerWidth = rightDivider.getWidth();
             double rightDividerX = width * rightDivider.getPosition();
-            double rightWidth = snapToPixel(width - rightDividerX - rightDividerWidth / 2, true);
+            double rightWidth = snapToPixel(width - rightDividerX - halfRightDividerWidth, true);
 
             double centerWidth = width - leftWidth - leftDividerWidth - rightWidth - rightDividerWidth;
 
-            left.update(x, y, leftWidth, height, snapToPixel);
+            left.layoutChildren(x, y, leftWidth, height, snapToPixel);
             x += leftWidth;
-            leftDivider.update(x, y, leftDividerWidth, height);
+            leftDivider.layoutInArea(x, y, leftDividerWidth, height);
             x += leftDividerWidth;
-            center.update(x, y, centerWidth, height);
+            center.layoutInArea(x, y, centerWidth, height);
             x += centerWidth;
-            rightDivider.update(x, y, rightDividerWidth, height);
+            rightDivider.layoutInArea(x, y, rightDividerWidth, height);
             x += rightDividerWidth;
-            right.update(x, y, rightWidth, height, snapToPixel);
+            right.layoutChildren(x, y, rightWidth, height, snapToPixel);
         }
     }
 
@@ -155,31 +197,42 @@ class LayoutHelper {
             this.orientation = orientation;
         }
 
-        public boolean isManaged() {
-            return leftTop.isManaged() || rightBottom.isManaged();
+        public double minWidth() {
+            return leftTop.minWidth() + divider.getDividerWidth() + rightBottom.minWidth();
         }
 
-        public void update(double x, double y, double width, double height, boolean snapToPixel) {
-            divider.updateParentSize(width, height, 0, 1);
+        public double minHeight() {
+            return leftTop.minWidth() + divider.getDividerWidth() + rightBottom.minWidth();
+        }
 
+        public void layoutChildren(double x, double y, double width, double height, boolean snapToPixel) {
             if (leftTop.isManaged() && rightBottom.isManaged()) {
-                double dividerWidth = divider.getWidth();
+                double dividerWidth = divider.getDividerWidth();
+                double halfDividerWidth = dividerWidth / 2;
                 if (orientation == Orientation.HORIZONTAL) {
+                    divider.validDividerPosition(width,
+                            (leftTop.minWidth() + halfDividerWidth) / width,
+                            1 - (rightBottom.minWidth() + halfDividerWidth) / width);
+
                     double dividerX = width * divider.getPosition();
-                    double leftWidth = snapToPixel(dividerX - dividerWidth / 2, snapToPixel);
-                    leftTop.update(x, y, leftWidth, height);
-                    divider.update(x + leftWidth, y, dividerWidth, height);
-                    rightBottom.update(x + leftWidth + dividerWidth, y, width - leftWidth - dividerWidth, height);
+                    double leftWidth = snapToPixel(dividerX - halfDividerWidth, snapToPixel);
+                    leftTop.layoutInArea(x, y, leftWidth, height);
+                    divider.layoutInArea(x + leftWidth, y, dividerWidth, height);
+                    rightBottom.layoutInArea(x + leftWidth + dividerWidth, y, width - leftWidth - dividerWidth, height);
                 } else {
+                    divider.validDividerPosition(height,
+                            (leftTop.minWidth() + halfDividerWidth) / height,
+                            1 - (rightBottom.minWidth() + halfDividerWidth) / height);
+
                     double dividerY = height * divider.getPosition();
-                    double topHeight = snapToPixel(dividerY - dividerWidth / 2, snapToPixel);
-                    leftTop.update(x, y, width, topHeight);
-                    divider.update(x, y + topHeight, width, height);
-                    rightBottom.update(x, y + topHeight + dividerWidth, width, height - topHeight - dividerWidth);
+                    double topHeight = snapToPixel(dividerY - halfDividerWidth, snapToPixel);
+                    leftTop.layoutInArea(x, y, width, topHeight);
+                    divider.layoutInArea(x, y + topHeight, width, height);
+                    rightBottom.layoutInArea(x, y + topHeight + dividerWidth, width, height - topHeight - dividerWidth);
                 }
             } else {
-                leftTop.update(x, y, width, height);
-                rightBottom.update(x, y, width, height);
+                leftTop.layoutInArea(x, y, width, height);
+                rightBottom.layoutInArea(x, y, width, height);
             }
         }
     }
@@ -241,10 +294,14 @@ class LayoutHelper {
     }
 
     public void layout(double x, double y, double width, double height, boolean snapToPixel) {
-        root.update(x, y, width, height, snapToPixel);
+        root.layoutChildren(x, y, width, height, snapToPixel);
     }
 
     private static double snapToPixel(double value, boolean snapToPixel) {
         return snapToPixel ? Math.ceil(value) : value;
+    }
+
+    private static double max(double a, double b, double c) {
+        return Math.max(Math.max(a, b), c);
     }
 }

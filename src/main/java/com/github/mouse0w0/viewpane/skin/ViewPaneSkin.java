@@ -661,7 +661,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
         private void setPosition(double position) {
             this.position = clamp(position, min, max);
-            this.peer.setPosition(getPosition());
+            this.peer.setPosition(position);
         }
 
         private static double clamp(double value, double min, double max) {
@@ -672,7 +672,15 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             return isVertical() ? prefWidth(-1) : prefHeight(-1);
         }
 
-        public void updateParentSize(double width, double height, double previousPos, double nextPos) {
+        public void validDividerPosition(double size, double min, double max) {
+            this.size = size;
+            this.min = min;
+            this.max = max;
+            setPosition(getPosition());
+        }
+
+        @Deprecated
+        public void validDividerPosition(double width, double height, double previousPos, double nextPos) {
             size = isVertical() ? width : height;
             double halfWidth = getDividerWidth() / 2;
             double previous = (size * previousPos + halfWidth) / size;
@@ -723,14 +731,14 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
 
         @Override
-        protected double computePrefWidth(double height) {
-            double contentWidth = content != null && content.isManaged() ? snapSize(content.prefWidth(-1)) : 0;
+        protected double computeMinWidth(double height) {
+            double contentWidth = content != null && content.isManaged() ? snapSize(content.minWidth(-1)) : 0;
             return snappedLeftInset() + contentWidth + snappedRightInset();
         }
 
         @Override
-        protected double computePrefHeight(double width) {
-            double contentHeight = content != null && content.isManaged() ? snapSize(content.prefHeight(-1)) : 0;
+        protected double computeMinHeight(double width) {
+            double contentHeight = content != null && content.isManaged() ? snapSize(content.minHeight(-1)) : 0;
             return snappedTopInset() + contentHeight + snappedBottomInset();
         }
 
