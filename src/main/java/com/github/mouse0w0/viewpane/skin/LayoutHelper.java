@@ -5,8 +5,8 @@ import com.github.mouse0w0.viewpane.geometry.EightPos;
 import javafx.geometry.Orientation;
 import javafx.geometry.Side;
 
-class LayoutHelper {
-    public static class Area {
+final class LayoutHelper {
+    public static final class Area {
         ViewPaneSkin.ContentArea peer;
 
         public boolean isManaged() {
@@ -28,7 +28,7 @@ class LayoutHelper {
         }
     }
 
-    public static class Divider {
+    public static final class Divider {
         ViewPaneSkin.ContentDivider peer;
 
         private final DividerType type;
