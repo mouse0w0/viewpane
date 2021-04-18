@@ -13,6 +13,15 @@ import java.util.HashMap;
 
 public class ViewTab {
 
+    public static final Object VIEW_TAB_KEY = new Object();
+
+    public static ViewTab getViewTab(Node content) {
+        if (content != null && content.hasProperties()) {
+            return (ViewTab) content.getProperties().get(VIEW_TAB_KEY);
+        }
+        return null;
+    }
+
     public ViewTab() {
         this(null, null, null);
     }
@@ -98,7 +107,21 @@ public class ViewTab {
 
     public final ObjectProperty<Node> contentProperty() {
         if (content == null) {
-            content = new SimpleObjectProperty<>(this, "content");
+            content = new SimpleObjectProperty<Node>(this, "content") {
+                @Override
+                public void set(Node newValue) {
+                    Node oldValue = get();
+                    if (oldValue != null) {
+                        oldValue.getProperties().remove(VIEW_TAB_KEY);
+                    }
+
+                    super.set(newValue);
+
+                    if (newValue != null) {
+                        newValue.getProperties().put(VIEW_TAB_KEY, ViewTab.this);
+                    }
+                }
+            };
         }
         return content;
     }
