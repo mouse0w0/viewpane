@@ -5,9 +5,9 @@ import com.github.mouse0w0.viewpane.geometry.EightPos;
 import javafx.geometry.Orientation;
 import javafx.geometry.Side;
 
-final class LayoutHelper {
-    public static final class Area {
-        ViewPaneSkin.ContentArea peer;
+final class DivisionHelper {
+    public static final class Container {
+        ViewPaneSkin.Container peer;
 
         public boolean isManaged() {
             return peer != null && peer.isManaged();
@@ -29,7 +29,7 @@ final class LayoutHelper {
     }
 
     public static final class Divider {
-        ViewPaneSkin.ContentDivider peer;
+        ViewPaneSkin.Divider peer;
 
         private final DividerType type;
 
@@ -126,11 +126,11 @@ final class LayoutHelper {
     private static final class HorizontalSplitter {
         private final Splitter left;
         private final Divider leftDivider;
-        private final Area center;
+        private final Container center;
         private final Divider rightDivider;
         private final Splitter right;
 
-        public HorizontalSplitter(Splitter left, Divider leftDivider, Area center, Divider rightDivider, Splitter right) {
+        public HorizontalSplitter(Splitter left, Divider leftDivider, Container center, Divider rightDivider, Splitter right) {
             this.left = left;
             this.leftDivider = leftDivider;
             this.center = center;
@@ -178,12 +178,12 @@ final class LayoutHelper {
     }
 
     private static final class Splitter {
-        private final Area leftTop;
+        private final Container leftTop;
         private final Divider divider;
-        private final Area rightBottom;
+        private final Container rightBottom;
         private final Orientation orientation;
 
-        public Splitter(Area leftTop, Divider divider, Area rightBottom, Orientation orientation) {
+        public Splitter(Container leftTop, Divider divider, Container rightBottom, Orientation orientation) {
             this.leftTop = leftTop;
             this.divider = divider;
             this.rightBottom = rightBottom;
@@ -232,11 +232,11 @@ final class LayoutHelper {
 
     private final VerticalSplitter root;
 
-    final Area[] areas = new Area[8];
-    final Area center = new Area();
+    final Container[] containers = new Container[8];
+    final Container center = new Container();
     final Divider[] dividers = new Divider[8];
 
-    public LayoutHelper() {
+    public DivisionHelper() {
         Splitter top = new Splitter(
                 createNode(EightPos.TOP_LEFT),
                 createDivider(DividerType.TOP_SECONDARY),
@@ -278,8 +278,8 @@ final class LayoutHelper {
         root = vertical;
     }
 
-    private Area createNode(EightPos pos) {
-        return areas[pos.ordinal()] = new Area();
+    private Container createNode(EightPos pos) {
+        return containers[pos.ordinal()] = new Container();
     }
 
     private Divider createDivider(DividerType type) {

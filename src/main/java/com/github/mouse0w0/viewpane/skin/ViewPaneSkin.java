@@ -143,7 +143,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         return sideBar;
     }
 
-    static class SideBarArea extends Region {
+    static final class SideBarArea extends Region {
         private SideBar top;
         private SideBar left;
         private SideBar bottom;
@@ -283,9 +283,28 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
     }
 
-    static class SideBar extends Region {
+    static final class SideBar extends Region {
         private TabButtonBar topLeftBar;
         private TabButtonBar bottomRightBar;
+
+        SideBar(Side side) {
+            setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+
+            getStyleClass().setAll("side-bar");
+            pseudoClassStateChanged(StyleHelper.getPseudoClass(side), true);
+
+            getChildren().addListener(new InvalidationListener() {
+                @Override
+                public void invalidated(Observable observable) {
+                    if (getChildren().isEmpty()) {
+                        setManaged(false);
+                        setVisible(false);
+                    }
+                }
+            });
+
+            if (side.isVertical()) setRotate(90);
+        }
 
         public TabButtonBar getTopLeftBar() {
             return topLeftBar;
@@ -305,25 +324,6 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
             if (this.bottomRightBar != null) getChildren().remove(this.bottomRightBar);
             this.bottomRightBar = bottomRightBar;
             if (bottomRightBar != null) getChildren().add(bottomRightBar);
-        }
-
-        SideBar(Side side) {
-            setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
-
-            getStyleClass().setAll("side-bar");
-            pseudoClassStateChanged(StyleHelper.getPseudoClass(side), true);
-
-            getChildren().addListener(new InvalidationListener() {
-                @Override
-                public void invalidated(Observable observable) {
-                    if (getChildren().isEmpty()) {
-                        setManaged(false);
-                        setVisible(false);
-                    }
-                }
-            });
-
-            if (side.isVertical()) setRotate(90);
         }
 
         @Override
@@ -373,7 +373,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
     }
 
-    static class TabButtonBar extends Region {
+    static final class TabButtonBar extends Region {
         private final ViewPaneSkin viewPaneSkin;
         private final ViewGroup viewGroup;
 
@@ -519,38 +519,38 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
     }
 
-    static class DivisionArea extends Region {
+    static final class DivisionArea extends Region {
         private final ViewPaneSkin viewPaneSkin;
-        private final LayoutHelper layoutHelper;
+        private final DivisionHelper layoutHelper;
 
-        private final ContentArea[] views = new ContentArea[8];
-        private ContentArea center;
-        private final ContentDivider[] dividers = new ContentDivider[8];
+        private final Container[] views = new Container[8];
+        private Container center;
+        private final Divider[] dividers = new Divider[8];
 
         private boolean performingLayout = false;
 
         public DivisionArea(ViewPaneSkin viewPaneSkin) {
             this.viewPaneSkin = viewPaneSkin;
-            this.layoutHelper = new LayoutHelper();
+            this.layoutHelper = new DivisionHelper();
 
             getStyleClass().setAll("division-area");
         }
 
         public void setView(EightPos pos, Node content) {
-            ContentArea view = views[pos.ordinal()];
+            Container view = views[pos.ordinal()];
             if (view == null) {
-                view = new ContentArea(pos);
+                view = new Container(pos);
                 getChildren().add(view);
                 views[pos.ordinal()] = view;
             }
             view.setContent(content);
-            layoutHelper.areas[pos.ordinal()].peer = view;
+            layoutHelper.containers[pos.ordinal()].peer = view;
             updateDivider(pos);
         }
 
         public void setCenter(Node content) {
             if (center == null) {
-                center = new ContentArea(null);
+                center = new Container(null);
                 getChildren().add(center);
             }
             center.setContent(content);
@@ -579,9 +579,9 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
 
         private void setDivider(DividerType type, boolean enable) {
-            ContentDivider divider = dividers[type.ordinal()];
+            Divider divider = dividers[type.ordinal()];
             if (divider == null) {
-                divider = new ContentDivider(viewPaneSkin.getSkinnable().getDivider(type));
+                divider = new Divider(viewPaneSkin.getSkinnable().getDivider(type));
                 dividers[type.ordinal()] = divider;
                 layoutHelper.dividers[type.ordinal()].peer = divider;
                 getChildren().add(divider);
@@ -592,9 +592,9 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
 
         private int getManagedViewCount(EightPos a, EightPos b) {
             int result = 0;
-            LayoutHelper.Area[] areas = layoutHelper.areas;
-            if (areas[a.ordinal()].isManaged()) result++;
-            if (areas[b.ordinal()].isManaged()) result++;
+            DivisionHelper.Container[] containers = layoutHelper.containers;
+            if (containers[a.ordinal()].isManaged()) result++;
+            if (containers[b.ordinal()].isManaged()) result++;
             return result;
         }
 
@@ -616,7 +616,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
     }
 
-    static class ContentDivider extends Region {
+    static final class Divider extends Region {
         private final ViewPane.Divider peer;
 
         private double position;
@@ -628,7 +628,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         private double initialPos;
         private double mousePos;
 
-        public ContentDivider(ViewPane.Divider peer) {
+        public Divider(ViewPane.Divider peer) {
             this.peer = peer;
             this.position = peer.getPosition();
 
@@ -693,19 +693,19 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
     }
 
-    static class ContentArea extends Region {
+    static final class Container extends Region {
         public static final PseudoClass CENTER = PseudoClass.getPseudoClass("center");
 
         private Node content;
 
-        public ContentArea(EightPos pos) {
+        public Container(EightPos pos) {
             if (pos != null) {
                 pseudoClassStateChanged(StyleHelper.getPseudoClass(pos), true);
             } else {
                 pseudoClassStateChanged(CENTER, true);
             }
 
-            getStyleClass().setAll("content-area");
+            getStyleClass().setAll("container");
         }
 
         public void setContent(Node content) {
@@ -747,7 +747,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
     }
 
-    static class TabButton extends ButtonBase {
+    static final class TabButton extends ButtonBase {
         private final ViewTab tab;
 
         public TabButton(ViewTab tab) {
@@ -774,7 +774,7 @@ public class ViewPaneSkin extends SkinBase<ViewPane> {
         }
     }
 
-    static class TabButtonSkin extends LabeledSkinBase<TabButton, ButtonBehavior<TabButton>> {
+    static final class TabButtonSkin extends LabeledSkinBase<TabButton, ButtonBehavior<TabButton>> {
         private static final PseudoClass SELECTED_PSEUDO_CLASS =
                 PseudoClass.getPseudoClass("selected");
 
